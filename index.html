@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>AFG WALLET — BNB Chain</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0f1e; --panel:#121634; --card:#151a3e; --ink:#e9edff; --muted:#9fb1ff;
+    --pri:#4cc9f0; --pri2:#a855f7; --ok:#22c55e; --err:#ef4444; --warn:#f59e0b;
+    --b:#2b3162; --bdr:1px solid rgba(255,255,255,.08); --radius:14px; --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .phone{max-width:420px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+  header{position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(10,12,30,.9),rgba(10,12,30,.55));border-bottom:var(--bdr)}
+  .topbar{display:flex;align-items:center;gap:10px;padding:12px 14px}
+  .brand{font-weight:800;font-size:16px}
+  .net{margin-left:auto;font-size:12px;padding:6px 10px;border-radius:999px;background:#17204a;border:1px solid #2e3774;color:#dfe9ff}
+  .menuBtn{margin-left:8px;background:transparent;border:0;color:var(--ink);font-size:20px;padding:6px;border-radius:8px;cursor:pointer}
+  .menuBtn:hover{background:rgba(255,255,255,.02)}
+
+  main{flex:1;padding:14px;display:flex;flex-direction:column;gap:12px;position:relative}
+
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:var(--bdr);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+  .h{margin:0 0 6px;font-weight:700;font-size:15px}
+  .sub{color:var(--muted);font-size:13px}
+  .row{display:flex;gap:8px;align-items:center}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  input,textarea,select{width:100%;background:#0b0e2a;border:1px solid #243064;color:var(--ink);border-radius:12px;padding:10px;font-family:inherit}
+  textarea{min-height:88px;resize:vertical}
+  .btn{background:linear-gradient(90deg,var(--pri),var(--pri2));color:#071022;border:none;padding:12px 14px;border-radius:12px;font-weight:800;cursor:pointer}
+  .btn.alt{background:#1b2052;color:#dfe6ff;border:1px solid #313a7a}
+  .btn.ghost{background:transparent;color:#dfe6ff;border:1px dashed #394187}
+  .btn.small{padding:8px 10px;font-size:13px}
+  .btn.danger{background:linear-gradient(90deg,#fb7185,#ef4444);color:#fff}
+
+  .muted{color:#aebfff;font-size:13px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace}
+  .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);margin:8px 0}
+
+  .asset{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:#0e1330;border:1px solid #2a3170}
+  .asset .left{display:flex;align-items:center;gap:10px}
+  .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2d336b,#5f6fec);display:grid;place-items:center;color:#fff;font-weight:700}
+  .asset .meta{display:flex;flex-direction:column}
+  .asset .right{text-align:right}
+  .price-small{font-size:13px;color:#bcd6ff}
+  .change{font-weight:700}
+  .change.pos{color:var(--ok)}
+  .change.neg{color:var(--err)}
+
+  .qrWrap{display:grid;place-items:center;padding:8px;border-radius:12px;background:#07102a;border:1px dashed #334}
+  #qrcode canvas{border-radius:8px}
+
+  .topSummary{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .totalBox{display:flex;flex-direction:column}
+  .totalUsd{font-weight:800;font-size:20px}
+  .totalSmall{color:var(--muted);font-size:12px}
+  .addrBox{display:flex;align-items:center;gap:8px}
+  .addrTxt{background:#0b0e2a;padding:8px 10px;border-radius:10px;border:1px solid #29335f;font-size:13px}
+
+  .teleBtn{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#0088cc;color:#fff;text-decoration:none;font-weight:700}
+  .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:60}
+  .modal{width:92%;max-width:420px;background:var(--card);border-radius:14px;padding:14px;border:var(--bdr)}
+  .menuList{display:flex;flex-direction:column;gap:8px}
+  .mItem{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:#0b1230;cursor:pointer;border:1px solid #28325f}
+  .mItem:hover{background:#0f1638}
+  .hidden{display:none !important}
+  .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#07102a;border:1px solid #334;color:#dfe6ff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:200}
+  .fade{animation:fade .18s ease both}@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  @media(min-width:700px){ .phone{margin-top:12px;margin-bottom:12px} }
+</style>
+</head>
+<body>
+<div class="phone">
+  <header>
+    <div class="topbar">
+      <div class="brand">🇦🇫 AFG WALLET</div>
+      <div class="net mono">BSC Mainnet · ChainId 56</div>
+
+      <!-- menu button top-right -->
+      <button id="menuBtn" class="menuBtn" title="Menu">⋮</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- AUTH -->
+    <section id="auth" class="fade">
+      <div class="card">
+        <h3 class="h">Create / Reveal 12‑word secret</h3>
+        <div class="sub">Wallet is generated locally in your browser. Keep the 12 words offline.</div>
+        <div class="stack" style="margin-top:8px">
+          <div class="row">
+            <button id="btnGen" class="btn">Generate 12 words</button>
+            <button id="btnCopySeed" class="btn alt">Copy</button>
+          </div>
+          <textarea id="seedBox" placeholder="Your 12 words will appear here..." readonly></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="h">Log in with 12‑word phrase</h3>
+        <div class="stack">
+          <label for="seedLogin">Enter exactly 12 words (BIP‑39)</label>
+          <textarea id="seedLogin" placeholder="example: gravity machine north ..."></textarea>
+          <button id="btnLogin" class="btn">Log in</button>
+          <div class="sub">Trust Wallet & other BIP‑39 12‑word phrases are supported.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dash" class="hidden fade">
+      <div class="card">
+        <div class="topSummary">
+          <div class="totalBox">
+            <div class="totalUsd" id="totalUsd">$0.00</div>
+            <div class="totalSmall" id="totalSmall">— • BNB: 0.000000</div>
+          </div>
+          <div style="min-width:140px;text-align:right">
+            <div class="muted">Address</div>
+            <div class="addrBox">
+              <div id="addrShort" class="addrTxt mono">0x12...AbCd</div>
+              <button id="btnCopyAddrTop" class="btn alt small">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div>
+            <h3 class="h">Assets</h3>
+            <div class="muted">Tap an asset to open Send; or use Add token</div>
+          </div>
+          <div>
+            <button id="btnAddToken" class="btn small ghost">Add token</button>
+          </div>
+        </div>
+
+        <div id="assetsList" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
+      </div>
+
+      <!-- send panel is hidden by default; launched from menu 'Send' or tapping an asset -->
+      <div class="card hidden" id="panelSend">
+        <h3 class="h">Send</h3>
+        <div class="stack">
+          <label>Asset</label>
+          <select id="wdAsset"></select>
+          <div class="row">
+            <div style="flex:1">
+              <label>Recipient</label>
+              <input id="wdTo" placeholder="0x...">
+            </div>
+            <div style="width:120px">
+              <label>Amount</label>
+              <input id="wdAmount" placeholder="0.0">
+            </div>
+          </div>
+          <div class="row">
+            <button id="btnMax" class="btn alt small">MAX</button>
+            <button id="btnSend" class="btn">Send</button>
+          </div>
+          <div id="feeNote" class="muted">Only network gas is charged.</div>
+          <div id="txBox" class="hidden">
+            <div class="divider"></div>
+            <div>Tx: <a id="txLink" target="_blank" class="mono"></a></div>
+            <div id="txStatus" class="muted">Waiting...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- deposit panel (show BNB address + QR) -->
+      <div class="card hidden" id="panelDeposit">
+        <h3 class="h">Deposit</h3>
+        <div class="stack">
+          <div class="qrWrap"><div id="qrcode"></div></div>
+          <label>Your BNB Address</label>
+          <div class="row">
+            <input id="depAddr" class="mono" readonly>
+            <button id="btnCopyAddr" class="btn alt small">Copy</button>
+          </div>
+          <a id="linkAddr" target="_blank" class="btn ghost small">Open on BscScan</a>
+          <div class="muted">Minimum deposit: <span class="mono">0.000001 BNB</span></div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="panelAddToken">
+        <h3 class="h">Add token by contract (BEP‑20)</h3>
+        <div class="stack">
+          <input id="tokAddr" placeholder="0x...">
+          <div class="row">
+            <button id="btnFetchToken" class="btn">Fetch</button>
+            <button id="btnCancelAdd" class="btn alt">Cancel</button>
+          </div>
+          <div id="tokInfo" class="hidden">
+            <div class="divider"></div>
+            <div class="row" style="align-items:center">
+              <div id="tokLogo" class="logo"></div>
+              <div style="flex:1">
+                <div id="t_name" style="font-weight:800"></div>
+                <div class="muted" id="t_symbol"></div>
+              </div>
+              <div style="text-align:right">
+                <div class="muted">Decimals</div>
+                <div class="mono" id="t_decimals"></div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:8px">
+              <button id="btnAddTokFinal" class="btn small">Add token</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- menu modal (top-right three-dot) -->
+  <div id="menuModal" class="modalBack">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:800">Menu</div>
+        <button id="menuClose" class="btn alt small">Close</button>
+      </div>
+      <div class="menuList">
+        <div id="mShowSeed" class="mItem">🔐 Show 12 words</div>
+        <a class="mItem" id="mAdmin" href="https://t.me/afgwalletsoon2" target="_blank" rel="noopener">💬 Contact Admin (Telegram)</a>
+        <div id="mSend" class="mItem">📤 Send</div>
+        <div id="mDeposit" class="mItem">📥 Deposit</div>
+        <div id="mLogout" class="mItem">🚪 Logout</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<!-- libs -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+/* AFG WALLET — updated menu behavior
+   - menuBtn opens a modal with: Show 12 words, Admin (Telegram), Send, Deposit, Logout
+   - Send opens panelSend, Deposit opens panelDeposit (BNB address + QR)
+   - Show 12 words shows mnemonic in alert
+   - Logout logs out
+*/
+
+const RPC_URL = "https://bsc-dataseed.binance.org";
+const CHAIN_ID = 56;
+const BSC_SCAN = "https://bscscan.com";
+const COINGECKO_API = "https://api.coingecko.com/api/v3";
+
+const { ethers } = window.ethers;
+const provider = new ethers.JsonRpcProvider(RPC_URL, { chainId: CHAIN_ID, name: "BSC" });
+const ERC20_ABI = [
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function decimals() view returns (uint8)",
+  "function totalSupply() view returns (uint256)",
+  "function balanceOf(address) view returns (uint256)",
+  "function transfer(address to, uint amount) returns (bool)"
+];
+
+let wallet = null, signer = null;
+const LS = { TOKENS: (a)=>`afg_tokens_${a}` };
+
+/* UTIL */
+const $ = (q)=>document.querySelector(q);
+const show = (el)=>el.classList.remove("hidden");
+const hide = (el)=>el.classList.add("hidden");
+const toast = (m, t=2000)=>{ const T=$("#toast"); T.textContent=m; show(T); setTimeout(()=>hide(T), t); };
+const isAddr = (v)=>/^0x[a-fA-F0-9]{40}$/.test(v||"");
+const fmtNum = (n, d=2)=>Number(n || 0).toLocaleString(undefined,{maximumFractionDigits:d});
+const shortAddr = (a)=> a ? `${a.slice(0,6)}...${a.slice(-4)}` : '';
+
+/* UI refs */
+const menuBtn = $("#menuBtn"), menuModal = $("#menuModal"), menuClose = $("#menuClose");
+const mShowSeed = $("#mShowSeed"), mSend = $("#mSend"), mDeposit = $("#mDeposit"), mLogout = $("#mLogout");
+const mAdmin = $("#mAdmin");
+
+const seedBox = $("#seedBox"), seedLogin = $("#seedLogin"), btnGen = $("#btnGen"), btnCopySeed = $("#btnCopySeed"), btnLogin = $("#btnLogin");
+const authSection = $("#auth"), dash = $("#dash");
+const totalUsdEl = $("#totalUsd"), totalSmall = $("#totalSmall");
+const addrShort = $("#addrShort"), btnCopyAddrTop = $("#btnCopyAddrTop");
+const depAddr = $("#depAddr"), linkAddr = $("#linkAddr");
+const qrcodeWrap = $("#qrcode");
+const assetsList = $("#assetsList");
+const btnAddToken = $("#btnAddToken"), panelAdd = $("#panelAddToken");
+const panelSend = $("#panelSend"), panelDeposit = $("#panelDeposit");
+const tokAddrInput = $("#tokAddr"), btnFetchToken = $("#btnFetchToken"), tokInfo = $("#tokInfo");
+const t_name = $("#t_name"), t_symbol = $("#t_symbol"), t_decimals = $("#t_decimals"), tokLogo = $("#tokLogo");
+const btnAddTokFinal = $("#btnAddTokFinal"), btnCancelAdd = $("#btnCancelAdd");
+const wdAsset = $("#wdAsset"), wdTo = $("#wdTo"), wdAmount = $("#wdAmount"), btnSend = $("#btnSend"), btnMax = $("#btnMax"), feeNote = $("#feeNote");
+const txBox = $("#txBox"), txLink = $("#txLink"), txStatus = $("#txStatus");
+const btnCopyAddr = $("#btnCopyAddr");
+
+/* Menu */
+menuBtn.onclick = ()=>{ menuModal.style.display="flex"; };
+menuClose.onclick = ()=>{ menuModal.style.display="none"; };
+menuModal.onclick = (e)=>{ if(e.target===menuModal) menuModal.style.display="none"; };
+
+/* menu item handlers */
+mShowSeed.onclick = ()=>{
+  menuModal.style.display="none";
+  if(!wallet?.mnemonic?.phrase) return toast("No mnemonic available");
+  alert("Your 12 words:\n\n" + wallet.mnemonic.phrase + "\n\n⚠️ Do NOT share!");
+};
+mSend.onclick = ()=>{
+  menuModal.style.display="none";
+  // open send panel
+  hide(panelDeposit); hide(panelAdd); show(panelSend);
+  populateSendSelect();
+  window.scrollTo({ top: 260, behavior: "smooth" });
+};
+mDeposit.onclick = ()=>{
+  menuModal.style.display="none";
+  // open deposit panel
+  hide(panelSend); hide(panelAdd); show(panelDeposit);
+  if(wallet){
+    depAddr.value = wallet.address;
+    linkAddr.href = `${BSC_SCAN}/address/${wallet.address}`;
+    $("#qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"), { text: wallet.address, width:160, height:160 });
+    window.scrollTo({ top: 260, behavior: "smooth" });
+  } else {
+    toast("Please log in first");
+  }
+};
+mLogout.onclick = ()=>{
+  menuModal.style.display="none";
+  logout();
+};
+
+/* AUTH */
+btnGen.onclick = ()=>{
+  const w = ethers.Wallet.createRandom(ethers.randomBytes(32));
+  const phrase = w.mnemonic?.phrase || "";
+  seedBox.value = phrase;
+  toast("12 words generated. Keep them safe.");
+};
+btnCopySeed.onclick = ()=>{ if(seedBox.value) navigator.clipboard.writeText(seedBox.value) && toast("Copied"); };
+
+btnLogin.onclick = async ()=>{
+  const phrase = seedLogin.value.trim().toLowerCase().replace(/\s+/g," ");
+  const words = phrase.split(" ").filter(Boolean);
+  if(words.length !== 12){ toast("Please enter exactly 12 words."); return; }
+  try{
+    wallet = ethers.Wallet.fromPhrase(phrase).connect(provider);
+    signer = wallet;
+    await afterLogin();
+  }catch(e){
+    console.error(e); toast("Invalid phrase or checksum failed.");
+  }
+};
+
+async function afterLogin(){
+  hide(authSection); show(dash);
+  addrShort.textContent = shortAddr(wallet.address);
+  depAddr.value = wallet.address;
+  linkAddr.href = `${BSC_SCAN}/address/${wallet.address}`;
+  $("#qrcode").innerHTML = "";
+  new QRCode(document.getElementById("qrcode"), { text: wallet.address, width:160, height:160 });
+
+  await refreshAll();
+}
+
+/* logout */
+function logout(){
+  wallet = null; signer = null;
+  hide(dash); show(authSection);
+  seedLogin.value = "";
+  toast("Logged out");
+}
+
+/* copy addr */
+btnCopyAddrTop.onclick = btnCopyAddr.onclick = ()=>{ navigator.clipboard.writeText(depAddr.value); toast("Copied"); };
+
+/* add token */
+btnAddToken.onclick = ()=>{ show(panelAdd); hide(panelSend); hide(panelDeposit); };
+btnCancelAdd.onclick = ()=>{ hide(panelAdd); };
+btnFetchToken.onclick = async ()=>{
+  const addr = tokAddrInput.value.trim();
+  if(!isAddr(addr)) return toast("Invalid contract address");
+  try{
+    show(tokInfo);
+    const c = new ethers.Contract(addr, ERC20_ABI, provider);
+    const [name, symbol, decimals] = await Promise.all([c.name(), c.symbol(), c.decimals()]);
+    t_name.textContent = name; t_symbol.textContent = symbol; t_decimals.textContent = String(decimals);
+    // try coingecko for logo
+    const cg = await fetchTokenCoingecko(addr);
+    if(cg && cg.image) { tokLogo.style.backgroundImage = `url(${cg.image.small||cg.image.thumb||cg.image.large})`; tokLogo.textContent = ""; }
+    else { tokLogo.style.backgroundImage = ""; tokLogo.textContent = (symbol||name||"T").slice(0,2).toUpperCase(); }
+    show(tokInfo);
+  }catch(e){
+    console.error(e); toast("Could not read token on-chain.");
+  }
+};
+btnAddTokFinal.onclick = async ()=>{
+  const addr = tokAddrInput.value.trim();
+  if(!isAddr(addr)) return toast("Invalid address");
+  const toks = getTokens(wallet.address);
+  if(toks.some(x=>x.address.toLowerCase()===addr.toLowerCase())) return toast("Token already added");
+  const entry = { address: addr, name: t_name.textContent || "Token", symbol: t_symbol.textContent || "TOKEN", decimals: Number(t_decimals.textContent)||18, balance:0 };
+  toks.push(entry); saveTokens(wallet.address, toks);
+  toast("Token added");
+  tokAddrInput.value=""; hide(tokInfo); hide(panelAdd);
+  await refreshAll();
+};
+
+/* Balances, render, send */
+async function refreshAll(){
+  if(!wallet) return;
+  await refreshBalancesAndPrices();
+  renderTopSummary();
+  renderAssets();
+  await populateSendSelect();
+}
+
+async function refreshBalancesAndPrices(){
+  const bnbRaw = await provider.getBalance(wallet.address);
+  const bnbBalance = Number(ethers.formatEther(bnbRaw));
+  const bnbMarket = await fetchBNBMarket();
+  const bnbPriceUSD = bnbMarket?.current_price || 0;
+  const bnbChange24 = bnbMarket?.price_change_percentage_24h ?? 0;
+  const toks = getTokens(wallet.address);
+  for(const t of toks){
+    try{
+      const c = new ethers.Contract(t.address, ERC20_ABI, provider);
+      const [balRaw, name, symbol, decimals] = await Promise.all([
+        c.balanceOf(wallet.address), c.name().catch(()=>t.name||"Token"), c.symbol().catch(()=>t.symbol||"TOK"), c.decimals().catch(()=>t.decimals||18)
+      ]);
+      t.name = name; t.symbol = symbol; t.decimals = Number(decimals);
+      t.balance = Number(ethers.formatUnits(balRaw, t.decimals));
+      const cg = await fetchTokenCoingecko(t.address);
+      if(cg){
+        t.price = cg.market_data?.current_price?.usd ?? null;
+        t.change24 = cg.market_data?.price_change_percentage_24h ?? null;
+        t.logo = cg.image?.small || cg.image?.thumb || cg.image?.large || null;
+      }else{
+        const tp = await fetchTokenPriceSimple(t.address);
+        t.price = tp?.usd || null;
+        t.change24 = tp?.usd_24h_change ?? null;
+        t.logo = null;
+      }
+    }catch(e){ console.warn("token fetch error", t.address, e); }
+  }
+  saveTokens(wallet.address, toks);
+  window.afg_state = { bnbBalance, bnbPriceUSD, bnbChange24, tokens: toks };
+}
+
+function renderTopSummary(){
+  const s = window.afg_state || {};
+  const bnbVal = (s.bnbBalance || 0) * (s.bnbPriceUSD || 0);
+  let tot = bnbVal;
+  for(const t of (s.tokens||[])) tot += (Number(t.balance)||0) * (Number(t.price)||0);
+  totalUsdEl.textContent = `$${fmtNum(tot,2)}`;
+  totalSmall.textContent = `• BNB: ${fmtNum(s.bnbBalance,6)} • ${fmtNum(s.bnbPriceUSD,3)} USD`;
+  addrShort.textContent = shortAddr(wallet.address);
+  depAddr.value = wallet.address;
+}
+
+function renderAssets(){
+  assetsList.innerHTML = "";
+  const s = window.afg_state || {};
+  // BNB
+  assetsList.appendChild(createAssetElement({
+    logoUrl: null, symbol:"BNB", name:"BNB", balance: s.bnbBalance||0, price: s.bnbPriceUSD||0, change24: s.bnbChange24||0,
+    bscscanLink: `${BSC_SCAN}/address/${wallet.address}`, onClick: ()=>openSendFor("BNB")
+  }));
+  for(const t of (s.tokens||[])){
+    assetsList.appendChild(createAssetElement({
+      logoUrl: t.logo, symbol: t.symbol, name: t.name, balance: t.balance, price: t.price, change24: t.change24,
+      bscscanLink: `${BSC_SCAN}/token/${t.address}?a=${wallet.address}`, onClick: ()=>openSendFor(t.address)
+    }));
+  }
+}
+
+function createAssetElement({logoUrl,name,symbol,balance,price,change24,bscscanLink,onClick}){
+  const wrap = document.createElement("div");
+  wrap.className="asset";
+  const left = document.createElement("div"); left.className="left";
+  const logo = document.createElement("div"); logo.className="logo";
+  if(logoUrl){ logo.style.backgroundImage = `url(${logoUrl})`; logo.style.backgroundSize="cover"; logo.textContent=""; }
+  else { logo.textContent = (symbol||name||"T").slice(0,2).toUpperCase(); logo.style.backgroundImage=""; }
+  const meta = document.createElement("div"); meta.className="meta";
+  const nm = document.createElement("div"); nm.textContent = name || symbol;
+  const sm = document.createElement("div"); sm.className="muted price-small"; sm.textContent = symbol || "";
+  meta.appendChild(nm); meta.appendChild(sm);
+  left.appendChild(logo); left.appendChild(meta);
+
+  const right = document.createElement("div"); right.className="right";
+  const balLine = document.createElement("div"); balLine.className="mono"; balLine.textContent = `${fmtNum(balance,6)} ${symbol||""}`;
+  const priceUSD = price ? `$${fmtNum(price,4)}` : "—";
+  const val = price ? `$${fmtNum((balance||0)*price,2)}` : "—";
+  const valLine = document.createElement("div"); valLine.className="price-small"; valLine.textContent = `${val} • ${priceUSD}`;
+  const change = document.createElement("div"); change.className="change";
+  const chVal = Number(change24 || 0);
+  change.textContent = (isNaN(chVal) ? "—" : `${(chVal>=0?"+":"")}${fmtNum(chVal,2)}%`);
+  if(chVal>0) change.classList.add("pos"); else if(chVal<0) change.classList.add("neg");
+  right.appendChild(balLine); right.appendChild(valLine); right.appendChild(change);
+
+  wrap.appendChild(left); wrap.appendChild(right);
+  wrap.style.cursor="pointer";
+  wrap.onclick = ()=> onClick && onClick();
+
+  const scanBtn = document.createElement("a");
+  scanBtn.href = bscscanLink; scanBtn.target="_blank"; scanBtn.textContent="BscScan"; scanBtn.className="btn ghost small";
+  scanBtn.style.marginTop="8px"; scanBtn.style.display="inline-block";
+  const container = document.createElement("div");
+  container.appendChild(wrap);
+  container.appendChild(scanBtn);
+  return container;
+}
+
+/* send */
+async function populateSendSelect(){
+  wdAsset.innerHTML = "";
+  const optB = document.createElement("option"); optB.value = "BNB"; optB.textContent = "BNB (native)"; wdAsset.appendChild(optB);
+  const toks = getTokens(wallet.address);
+  for(const t of toks){
+    const o = document.createElement("option"); o.value = t.address; o.textContent = `${t.symbol||'TOK'} — ${t.name||''}`;
+    wdAsset.appendChild(o);
+  }
+}
+function openSendFor(assetAddr){
+  hide(panelDeposit); hide(panelAdd); show(panelSend);
+  populateSendSelect();
+  wdAsset.value = assetAddr;
+  window.scrollTo({ top: 260, behavior: "smooth" });
+}
+btnMax.onclick = async ()=>{ const sel = wdAsset.value; if(sel==="BNB"){ wdAmount.value="MAX"; } else { const toks = getTokens(wallet.address); const t=toks.find(x=>x.address===sel); if(t) wdAmount.value=String(t.balance); } };
+btnSend.onclick = async ()=>{
+  try{
+    const to = wdTo.value.trim();
+    if(!isAddr(to)) return toast("Invalid recipient address.");
+    const sel = wdAsset.value;
+    const txt = wdAmount.value.trim();
+    hide(txBox);
+    txStatus.textContent = "Waiting for confirmation...";
+    if(sel === "BNB"){
+      let amount;
+      if(txt.toUpperCase()==="MAX"){
+        const bal = await provider.getBalance(wallet.address);
+        const gasPrice = await feePerGas();
+        const fee = gasPrice * 21000n;
+        if(bal <= fee) return toast("Balance too low for gas.");
+        amount = bal - fee;
+      }else{
+        if(isNaN(Number(txt))) return toast("Invalid amount.");
+        amount = ethers.parseEther(txt);
+        const min = ethers.parseEther("0.000001");
+        if(amount < min) return toast("Min 0.000001 BNB");
+      }
+      const gasPrice = await feePerGas();
+      const tx = await signer.sendTransaction({ to, value: amount, gasPrice });
+      show(txBox); txLink.href = `${BSC_SCAN}/tx/${tx.hash}`; txLink.textContent = tx.hash;
+      await tx.wait();
+      txStatus.textContent = "Confirmed ✔️";
+    }else{
+      const toks = getTokens(wallet.address);
+      const t = toks.find(x=>x.address===sel);
+      if(!t) return toast("Token not found");
+      if(isNaN(Number(txt))) return toast("Invalid amount");
+      const c = new ethers.Contract(t.address, ERC20_ABI, signer);
+      const amount = ethers.parseUnits(txt, t.decimals || 18);
+      const tx = await c.transfer(to, amount);
+      show(txBox); txLink.href = `${BSC_SCAN}/tx/${tx.hash}`; txLink.textContent = tx.hash;
+      await tx.wait();
+      txStatus.textContent = "Confirmed ✔️";
+    }
+    await refreshAll();
+  }catch(e){
+    console.error(e); toast("Transaction failed"); show(txBox); txStatus.textContent = "Failed";
+  }
+};
+
+/* fee helper */
+async function feePerGas(){ const f = await provider.getFeeData(); return f.gasPrice ?? f.maxFeePerGas ?? ethers.parseUnits("2","gwei"); }
+
+/* coingecko helpers */
+async function fetchBNBMarket(){ try{ const res = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=binancecoin`); const arr = await res.json(); return Array.isArray(arr)&&arr.length?arr[0]:null; }catch(e){ return null; } }
+async function fetchTokenCoingecko(contract){ try{ const url = `${COINGECKO_API}/coins/binance-smart-chain/contract/${contract}`; const res = await fetch(url); if(!res.ok) return null; return await res.json(); }catch(e){ return null; } }
+async function fetchTokenPriceSimple(contract){ try{ const url = `${COINGECKO_API}/simple/token_price/binance-smart-chain?contract_addresses=${contract}&vs_currencies=usd&include_24hr_change=true`; const res = await fetch(url); const j = await res.json(); const key = Object.keys(j)[0]; return j[key]||null; }catch(e){ return null; } }
+
+/* localStorage */
+function getTokens(addr){ try{ return JSON.parse(localStorage.getItem(LS.TOKENS(addr)) || "[]"); }catch{ return []; } }
+function saveTokens(addr,list){ localStorage.setItem(LS.TOKENS(addr), JSON.stringify(list)); }
+
+/* init wiring */
+(function init(){
+  // set initial UI behavior
+  btnAddToken.onclick = ()=>{ show(panelAdd); hide(panelSend); hide(panelDeposit); };
+  // if clicked outside menu, close handled by menuModal onclick above
+
+  // no wallet logged in initially
+})();
+</script>
+</body>
+</html> 
